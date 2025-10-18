@@ -19,6 +19,23 @@ const corsOptions = {
   credentials: true,
 };
 
+// // Apply CORS globally
+// app.use(cors(corsOptions));
+app.use(cors());
+
+
+// Explicitly respond to preflight requests
+app.options("*", cors(corsOptions));
+
+// Routes
+app.get("/", (req, res) => res.send("Server running"));
+
+app.use("/api/v1", userRoute);
+app.use("/api/v1", blogRoute);
+
+// Error handling
+process.on("unhandledRejection", console.error);
+process.on("uncaughtException", console.error);
 
 // Start server
 async function start() {
