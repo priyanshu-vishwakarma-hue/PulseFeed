@@ -1,0 +1,90 @@
+@import "@flaticon/flaticon-uicons/css/all/all";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    /* Prevents layout shift when content height changes */
+    @apply overflow-y-scroll;
+  }
+
+  body {
+    /* --- FIX: Use neutral-950 for darker background in dark mode --- */
+    @apply bg-neutral-100 font-sans text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-200;
+  }
+
+  /* --- FIX: Input field styling for better visibility --- */
+  /* Give all inputs a consistent, slightly lighter dark bg */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    @apply bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700
+           text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500
+           focus:ring-2 focus:ring-primary-500 focus:border-primary-500 rounded-lg
+           transition duration-150 ease-in-out;
+  }
+}
+
+@layer components {
+  .popup {
+    /* --- FIX: Use new theme colors for popups --- */
+    /* Popups are slightly lighter than the navbar */
+    @apply block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700;
+  }
+}
+
+@layer utilities {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-neutral-200 dark:bg-neutral-800;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neutral-400 dark:bg-neutral-600;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-neutral-500 dark:bg-neutral-500;
+  }
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #E5E7EB; 
+  border-bottom-color: #2563eb; /* blue-600 */
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+.dark .loader {
+  border-color: #4b5563; /* gray-600 */
+  border-bottom-color: #2563eb; /* blue-600 */
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.blog-content-display {
+  @apply prose prose-lg dark:prose-invert max-w-none
+         prose-p:text-neutral-700 dark:prose-p:text-neutral-300
+         prose-headings:text-neutral-800 dark:prose-headings:text-neutral-100
+         prose-a:text-primary-600 dark:prose-a:text-primary-400
+         prose-strong:text-neutral-800 dark:prose-strong:text-neutral-100
+         prose-blockquote:border-primary-500 prose-blockquote:text-neutral-600 dark:prose-blockquote:text-neutral-300;
+}
