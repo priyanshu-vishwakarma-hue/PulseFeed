@@ -1,7 +1,7 @@
 const User = require("../models/userSchema");
 const bcrypt = require("bcrypt");
 const { generateJWT, verifyJWT } = require("../utils/generateToken");
-const transporter = require("../utils/transporter");
+const sendMail = require("../utils/transporter");
 const ShortUniqueId = require("short-unique-id");
 const { randomUUID } = new ShortUniqueId({ length: 5 });
 const admin = require("firebase-admin");
@@ -91,10 +91,7 @@ async function createUser(req, res) {
           id: checkForexistingUser._id,
         });
 
-        //email logic
-
-        const sendingEmail = transporter.sendMail({
-          from: EMAIL_USER,
+        await sendMail({
           to: checkForexistingUser.email,
           subject: "Email Verification",
           text: "Please verify your email",
@@ -124,10 +121,7 @@ async function createUser(req, res) {
       id: newUser._id,
     });
 
-    //email logic
-
-    const sendingEmail = transporter.sendMail({
-      from: EMAIL_USER,
+    await sendMail({
       to: email,
       subject: "Email Verification",
       text: "Please verify your email",
@@ -321,16 +315,12 @@ async function login(req, res) {
     }
 
     if (!checkForexistingUser.isVerify) {
-      // send verification email
       let verificationToken = await generateJWT({
         email: checkForexistingUser.email,
         id: checkForexistingUser._id,
       });
 
-      //email logic
-
-      const sendingEmail = transporter.sendMail({
-        from: EMAIL_USER,
+      await sendMail({
         to: checkForexistingUser.email,
         subject: "Email Verification",
         text: "Please verify your email",
