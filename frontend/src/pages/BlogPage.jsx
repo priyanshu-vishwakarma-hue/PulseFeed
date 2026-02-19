@@ -12,11 +12,15 @@ import {
 import { formatDate } from "../utils/formatDate";
 import { handleSaveBlog, handleFollowCreator, handleLikeBlog } from "../utils/api";
 import Comment from "../components/Comment";
-import { setIsOpen } from "../utils/commentSlice";
+import { setIsOpen, openOnLoad } from "../utils/commentSlice";
+import { toggleLikeBlogLocal, toggleSaveBlogLocal, removeBlogFromLists } from "../utils/userSilce";
+import { useLocation, useNavigate } from "react-router-dom";
+import Avatar from "../components/Avatar";
 
 function BlogPage() {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [isBlogSaved, setIsBlogSaved] = useState(false);
   const [islike, setIsLike] = useState(false);
@@ -47,11 +51,20 @@ function BlogPage() {
       setIsBlogSaved(fetchedBlog.totalSaves.includes(userId));
       setIsLike(fetchedBlog.likes.includes(userId));
 
-      if (showOnLoad) {
-        dispatch(setIsOpen(true));
+          // If we were instructed to open on load (from another page) or there's a comment hash
+      // make sure the comment panel opens. use `openOnLoad` (idempotent) instead of toggling.
+      if (showOnLoad || (window.location.hash && window.location.hash.startsWith('#c-'))) {
+        dispatch(openOnLoad());
       }
 
     } catch (error) {
+      // If blog was deleted on server, make sure current user's local lists are cleaned up
+      if (error.response?.status === 404) {
+        dispatch(removeBlogFromLists(id));
+        toast.error("Blog not found — removed from your saved/liked lists");
+        navigate("/");
+        return;
+      }
       toast.error(error.response?.data?.message || "Failed to fetch blog");
     }
   }
@@ -68,6 +81,9 @@ function BlogPage() {
     if (!success) {
       setIsLike(originalLikeState); // Revert
       dispatch(changeLikes(userId));
+    } else {
+      // update local user lists (keeps profile tabs in sync)
+      dispatch(toggleLikeBlogLocal(blog._id));
     }
   }
 
@@ -81,6 +97,9 @@ function BlogPage() {
     
     if (!success) {
       setIsBlogSaved(originalSaveState); // Revert
+    } else {
+      // update local user lists
+      dispatch(toggleSaveBlogLocal(blog._id));
     }
   }
 
@@ -145,14 +164,7 @@ function BlogPage() {
 
           <div className="flex items-center my-8 gap-3">
             <Link to={`/@${displayCreator.username}`}>
-              <img
-                src={
-                  displayCreator?.profilePic ||
-                  `https://api.dicebear.com/9.x/initials/svg?seed=${displayCreator.name}`
-                }
-                alt={displayCreator.name}
-                className="w-12 h-12 rounded-full object-cover"
-              />
+              <Avatar name={displayCreator.name} src={displayCreator?.profilePic} alt={displayCreator.name} className="w-12 h-12 rounded-full object-cover" />
             </Link>
             <div className="flex flex-col">
               <div className="flex items-center gap-2 ">
@@ -189,7 +201,7 @@ function BlogPage() {
             </button>
 
             <button
-              onClick={() => dispatch(setIsOpen(true))}
+              onClick={() => dispatch(setIsOpen())}
               className="flex gap-2 items-center text-neutral-500 dark:text-neutral-400 hover:text-primary-500"
             >
               <i className="fi fi-rr-comment-alt text-2xl"></i>

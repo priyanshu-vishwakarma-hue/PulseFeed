@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { formatDate } from "../utils/formatDate";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { openOnLoad } from "../utils/commentSlice";
+import Avatar from "./Avatar";
 // Import 'setComments' here for the parent component
 import {
   setCommentLikes,
@@ -117,6 +119,7 @@ function BlogComments({ blog, onCommentAdded, onClose }) {
           comments={comments}
           userId={userId}
           blogId={blog._id}
+          blogSlug={blog.blogId}
           token={token}
           creatorId={creatorId}
           dispatch={dispatch}
@@ -136,7 +139,8 @@ function BlogComments({ blog, onCommentAdded, onClose }) {
 }
 
 // Reusable component for displaying comments and replies
-export function DisplayComments({ comments, userId, blogId, token, creatorId, dispatch }) {
+export function DisplayComments({ comments, userId, blogId, blogSlug, token, creatorId, dispatch }) {
+  const navigate = useNavigate();
   const [activeReply, setActiveReply] = useState(null);
   const [showReplies, setShowReplies] = useState({});
   const [currentEditComment, setCurrentEditComment] = useState(null);
@@ -226,7 +230,7 @@ export function DisplayComments({ comments, userId, blogId, token, creatorId, di
   return (
     <>
       {comments.map((comment) => (
-        <div key={comment._id} className="border-b pb-2">
+        <div key={comment._id} id={`c-${comment._id}`} className="border-b pb-2">
           <div className="flex flex-col gap-2 my-2">
             {currentEditComment === comment._id ? (
               <div className="my-2">
@@ -255,14 +259,7 @@ export function DisplayComments({ comments, userId, blogId, token, creatorId, di
               <>
                 <div className="flex w-full justify-between">
                   <Link to={`/@${comment.user.username}`} className="flex gap-2 items-center">
-                    <img
-                      src={
-                        comment.user?.profilePic ||
-                        `https://api.dicebear.com/9.x/initials/svg?seed=${comment.user.name}`
-                      }
-                      alt={comment.user.name}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
+                    <Avatar name={comment.user.name} src={comment.user?.profilePic} alt={comment.user.name} className="w-8 h-8 rounded-full" />
                     <div>
                       <p className="capitalize font-medium text-sm">{comment.user.name}</p>
                       <p className="text-xs text-gray-500">{formatDate(comment.createdAt)}</p>
@@ -282,7 +279,16 @@ export function DisplayComments({ comments, userId, blogId, token, creatorId, di
                   )}
                 </div>
 
-                <p className="font-medium text-gray-800">{comment.comment}</p>
+                <p
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dispatch(openOnLoad());
+                    navigate(`/blog/${blogSlug}#c-${comment._id}`);
+                  }}
+                  className="font-medium text-gray-800 cursor-pointer hover:underline"
+                >
+                  {comment.comment}
+                </p>
 
                 <div className="flex gap-4 items-center">
                   <div className="cursor-pointer flex gap-1 items-center text-gray-600">

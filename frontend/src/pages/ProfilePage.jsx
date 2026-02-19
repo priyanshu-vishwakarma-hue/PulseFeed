@@ -8,6 +8,7 @@ import DisplayBlogs from "../components/DisplayBlogs";
 import { addSlectedBlog } from "../utils/selectedBlogSlice";
 import { openOnLoad } from "../utils/commentSlice";
 import FollowListModal from "../components/FollowListModal"; // <-- IMPORT MODAL
+import Avatar from "../components/Avatar";
 
 function ProfilePage() {
   const { username } = useParams();
@@ -64,16 +65,19 @@ function ProfilePage() {
 
   function renderComponent() {
     if (!userData) return null;
-    
+
+    const isOwner = Boolean(userId && userData._id === userId);
+
     if (location.pathname === `/${username}`) {
+      const visible = isOwner ? userData.blogs : (userData.blogs || []).filter((blog) => !blog.draft);
       return (
-        <DisplayBlogs blogs={userData.blogs.filter((blog) => !blog.draft)} onCommentIconClick={handleCommentClick} setBlogs={updateBlogsInUserData} />
+        <DisplayBlogs blogs={visible} onCommentIconClick={handleCommentClick} setBlogs={updateBlogsInUserData} />
       );
     } else if (location.pathname === `/${username}/saved-blogs`) {
       return (
         <>
-          {userData.showSavedBlogs || userData._id === userId ? (
-            <DisplayBlogs blogs={userData.saveBlogs} onCommentIconClick={handleCommentClick} setBlogs={updateBlogsInUserData} />
+          {userData.showSavedBlogs || isOwner ? (
+            <DisplayBlogs blogs={(userData.saveBlogs || []).filter(b => !b.draft || isOwner)} onCommentIconClick={handleCommentClick} setBlogs={updateBlogsInUserData} />
           ) : (
             <Navigate to={`/${username}`} />
           )}
@@ -82,8 +86,8 @@ function ProfilePage() {
     } else if (location.pathname === `/${username}/draft-blogs`) {
       return (
         <>
-          {userData._id === userId ? (
-            <DisplayBlogs blogs={userData.blogs.filter((blog) => blog.draft)} onCommentIconClick={handleCommentClick} setBlogs={updateBlogsInUserData} />
+          {isOwner ? (
+            <DisplayBlogs blogs={(userData.blogs || []).filter((blog) => blog.draft)} onCommentIconClick={handleCommentClick} setBlogs={updateBlogsInUserData} />
           ) : (
             <Navigate to={`/${username}`} />
           )}
@@ -92,8 +96,8 @@ function ProfilePage() {
     } else { // Liked blogs
       return (
         <>
-          {userData.showLikedBlogs || userData._id === userId ? (
-            <DisplayBlogs blogs={userData.likeBlogs} onCommentIconClick={handleCommentClick} setBlogs={updateBlogsInUserData} />
+          {userData.showLikedBlogs || isOwner ? (
+            <DisplayBlogs blogs={(userData.likeBlogs || []).filter(b => !b.draft || isOwner)} onCommentIconClick={handleCommentClick} setBlogs={updateBlogsInUserData} />
           ) : (
             <Navigate to={`/${username}`} />
           )}
@@ -105,10 +109,22 @@ function ProfilePage() {
   useEffect(() => {
     async function fetchUserDetails() {
       try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
         let res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/users/${username.split("@")[1]}`
+          `${import.meta.env.VITE_BACKEND_URL}/users/${username.split("@")[1]}`,
+          { headers }
         );
-        setUserData(res.data.user);
+        // sanitize server response: remove null/invalid blog entries (handles deleted posts)
+        const serverUser = res.data.user || {};
+        const sanitize = (arr) =>
+          Array.isArray(arr)
+            ? arr.filter((b) => b && b._id && b.blogId && b.title)
+            : [];
+        serverUser.blogs = sanitize(serverUser.blogs);
+        serverUser.likeBlogs = sanitize(serverUser.likeBlogs);
+        serverUser.saveBlogs = sanitize(serverUser.saveBlogs);
+
+        setUserData(serverUser);
       } catch (error) {
         toast.error(error.response?.data?.message || "Failed to fetch user");
       }
@@ -138,12 +154,9 @@ function ProfilePage() {
           {/* --- FIX: Use new theme colors --- */}
           <div className="sticky top-24 p-6 bg-white dark:bg-neutral-900 rounded-lg shadow-md border border-neutral-200 dark:border-neutral-800">
             <div className="flex flex-col items-center">
-              <img
-                src={
-                  userData.profilePic
-                    ? userData.profilePic
-                    : `https://api.dicebear.com/9.x/initials/svg?seed=${userData.name}`
-                }
+              <Avatar
+                name={userData.name}
+                src={userData.profilePic}
                 alt={userData.name}
                 className="w-32 h-32 rounded-full object-cover border-4 border-neutral-100 dark:border-neutral-700 shadow-lg"
               />

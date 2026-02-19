@@ -36,6 +36,11 @@
     /* Popups are slightly lighter than the navbar */
     @apply block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700;
   }
+
+  /* temporary highlight for linked comment -> removed after a short timeout */
+  .highlighted-comment {
+    @apply ring-4 ring-primary-200 bg-primary-50 transition-colors duration-700;
+  }
 }
 
 @layer utilities {

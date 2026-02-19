@@ -4,6 +4,8 @@ import { addSlectedBlog } from "../utils/selectedBlogSlice";
 import { handleLikeBlog, handleSaveBlog } from "../utils/api";
 import { openOnLoad } from "../utils/commentSlice";
 import { formatDate } from "../utils/formatDate";
+import { toggleLikeBlogLocal, toggleSaveBlogLocal } from "../utils/userSilce";
+import Avatar from "./Avatar";
 
 function BlogCard({ blog, setBlogs }) {
   const { token, id: userId } = useSelector((state) => state.user);
@@ -36,6 +38,9 @@ function BlogCard({ blog, setBlogs }) {
       setBlogs(prevBlogs => prevBlogs.map(b => 
         b._id === blog._id ? blog : b // Revert to original blog prop
       ));
+    } else {
+      // sync local user lists
+      dispatch(toggleLikeBlogLocal(blog._id));
     }
   };
 
@@ -61,6 +66,9 @@ function BlogCard({ blog, setBlogs }) {
       setBlogs(prevBlogs => prevBlogs.map(b => 
         b._id === blog._id ? blog : b // Revert to original blog prop
       ));
+    } else {
+      // sync local user lists
+      dispatch(toggleSaveBlogLocal(blog._id));
     }
   };
 
@@ -80,14 +88,7 @@ function BlogCard({ blog, setBlogs }) {
         onClick={(e) => e.stopPropagation()} 
         className="flex items-center gap-2 group mb-4"
       >
-        <img
-          src={
-            blog?.creator?.profilePic ||
-            `https://api.dicebear.com/9.x/initials/svg?seed=${blog?.creator?.name}`
-          }
-          alt={blog.creator.name}
-          className="w-8 h-8 rounded-full object-cover"
-        />
+        <Avatar name={blog?.creator?.name} src={blog?.creator?.profilePic} alt={blog.creator.name} className="w-8 h-8 rounded-full" />
         <p className="font-medium text-sm text-neutral-900 dark:text-neutral-200 group-hover:underline">{blog?.creator?.name}</p>
         <span className="text-neutral-400 dark:text-neutral-600">·</span>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">{formatDate(blog?.createdAt)}</p>

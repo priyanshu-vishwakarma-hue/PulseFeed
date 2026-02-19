@@ -11,14 +11,14 @@ const userSlice = createSlice({
     profilePic: null,
     followers: [],
     following: [],
+    saveBlogs: [],
+    likeBlogs: [],
   },
   reducers: {
     login(state, action) {
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ followers: [], following: [], ...action.payload })
-      );
-      return { followers: [], following: [], ...action.payload };
+      const payload = { followers: [], following: [], saveBlogs: [], likeBlogs: [], ...action.payload };
+      localStorage.setItem("user", JSON.stringify(payload));
+      return payload;
     },
     logout(state, action) {
       localStorage.removeItem("user");
@@ -44,8 +44,40 @@ const userSlice = createSlice({
         return finalData;
       }
     },
+
+    // Toggle presence of blogId in user's likeBlogs (keeps local state in sync)
+    toggleLikeBlogLocal(state, action) {
+      const blogId = action.payload;
+      if (!state.likeBlogs) state.likeBlogs = [];
+      state.likeBlogs = state.likeBlogs.includes(blogId)
+        ? state.likeBlogs.filter((id) => id !== blogId)
+        : [...state.likeBlogs, blogId];
+      localStorage.setItem("user", JSON.stringify(state));
+      return state;
+    },
+
+    // Toggle presence of blogId in user's saveBlogs
+    toggleSaveBlogLocal(state, action) {
+      const blogId = action.payload;
+      if (!state.saveBlogs) state.saveBlogs = [];
+      state.saveBlogs = state.saveBlogs.includes(blogId)
+        ? state.saveBlogs.filter((id) => id !== blogId)
+        : [...state.saveBlogs, blogId];
+      localStorage.setItem("user", JSON.stringify(state));
+      return state;
+    },
+
+    // Remove blogId from all user lists (used when a blog is deleted on server)
+    removeBlogFromLists(state, action) {
+      const blogId = action.payload;
+      state.blogs = (state.blogs || []).filter((id) => id !== blogId);
+      state.saveBlogs = (state.saveBlogs || []).filter((id) => id !== blogId);
+      state.likeBlogs = (state.likeBlogs || []).filter((id) => id !== blogId);
+      localStorage.setItem("user", JSON.stringify(state));
+      return state;
+    },
   },
 });
 
-export const { login, logout, updateData } = userSlice.actions;
+export const { login, logout, updateData, toggleLikeBlogLocal, toggleSaveBlogLocal, removeBlogFromLists } = userSlice.actions;
 export default userSlice.reducer;

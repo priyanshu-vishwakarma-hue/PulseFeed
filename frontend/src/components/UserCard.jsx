@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { handleFollowCreator } from "../utils/api";
+import Avatar from "./Avatar";
 
 function UserCard({ user, onUserClick }) {
   const dispatch = useDispatch();
@@ -26,14 +27,7 @@ function UserCard({ user, onUserClick }) {
         onClick={onUserClick} 
         className="flex items-center gap-3 group"
       >
-        <img
-          src={
-            user.profilePic ||
-            `https://api.dicebear.com/9.x/initials/svg?seed=${user.name}`
-          }
-          alt={user.name}
-          className="w-10 h-10 rounded-full object-cover"
-        />
+        <Avatar name={user.name} src={user.profilePic} alt={user.name} className="w-10 h-10 rounded-full" />
         <div>
           <p className="font-semibold text-sm text-neutral-900 dark:text-neutral-100 group-hover:underline">
             {user.name}

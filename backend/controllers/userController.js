@@ -388,6 +388,16 @@ async function getUserById(req, res) {
   try {
     const username = req.params.username;
 
+    // Optional auth: determine viewer ID if Authorization header is present
+    const authHeader = req.headers.authorization;
+    let viewerId = null;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      const { verifyJWT } = require("../utils/generateToken");
+      const decoded = verifyJWT(token);
+      if (decoded && decoded.id) viewerId = decoded.id;
+    }
+
     const user = await User.findOne({ username })
       .populate({
         path: "followers following",
@@ -442,10 +452,18 @@ async function getUserById(req, res) {
         };
     };
 
-    // Transform all blog arrays
-    user.blogs = Array.isArray(user.blogs) ? user.blogs.map(transformBlog) : [];
-    user.likeBlogs = Array.isArray(user.likeBlogs) ? user.likeBlogs.map(transformBlog) : [];
-    user.saveBlogs = Array.isArray(user.saveBlogs) ? user.saveBlogs.map(transformBlog) : [];
+    const isOwner = viewerId && String(viewerId) === String(user._id);
+
+    // Transform all blog arrays (map then filter out any null/invalid entries)
+    // Additionally, hide drafts for non-owners so drafts are visible only to the writer
+    const sanitizeAndFilter = (arr) =>
+      Array.isArray(arr)
+        ? arr.map(transformBlog).filter(b => b && (!b.draft || isOwner))
+        : [];
+
+    user.blogs = sanitizeAndFilter(user.blogs);
+    user.likeBlogs = sanitizeAndFilter(user.likeBlogs);
+    user.saveBlogs = sanitizeAndFilter(user.saveBlogs);
     // --- END FIX ---
 
     return res.status(200).json({

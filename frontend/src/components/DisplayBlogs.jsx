@@ -4,7 +4,7 @@ function DisplayBlogs({ blogs, setBlogs, onCommentIconClick }) {
   
   // FIX: This component was crashing because `blogs` was undefined on initial render.
   // We add a check to make sure blogs is an array.
-  const blogsArray = Array.isArray(blogs) ? blogs : [];
+  const blogsArray = Array.isArray(blogs) ? blogs.filter(Boolean) : []; // filter out null/undefined entries
 
   return (
     <div>

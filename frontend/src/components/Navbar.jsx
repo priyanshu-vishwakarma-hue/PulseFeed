@@ -3,6 +3,7 @@ import { Link, Outlet, useNavigate, useLocation } from "react-router-dom"; // Ad
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../utils/userSilce";
 import { useTheme } from "../contexts/ThemeContext";
+import Avatar from "./Avatar";
 
 const logoUrl = "https://i.pinimg.com/736x/77/54/2f/77542ff0544861f29a82c1a1aa824cab.jpg";
 
@@ -133,14 +134,7 @@ function Navbar() {
                     className="w-10 h-10 aspect-square rounded-full overflow-hidden focus:outline-none"
                     onClick={() => setShowPopup((prev) => !prev)}
                   >
-                    <img
-                      src={
-                        profilePic ||
-                        `https://api.dicebear.com/9.x/initials/svg?seed=${name}`
-                      }
-                      alt="User profile"
-                      className="rounded-full w-full h-full object-cover"
-                    />
+                    <Avatar name={name} src={profilePic} alt="User profile" className="rounded-full w-full h-full" />
                   </button>
                   {showPopup && (
                     <div

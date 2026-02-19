@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setIsOpen } from "../utils/commentSlice";
+import { setIsOpen, openOnLoad } from "../utils/commentSlice";
 import axios from "axios";
 import {
   deleteCommentAndReply,
@@ -10,8 +10,9 @@ import {
   setUpdatedComments,
 } from "../utils/selectedBlogSlice";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { formatDate } from "../utils/formatDate";
+import Avatar from "./Avatar";
 
 function Comment({ onPostComment }) {
   const dispatch = useDispatch();
@@ -53,6 +54,23 @@ function Comment({ onPostComment }) {
   };
   
   const commentsArray = Array.isArray(comments) ? comments : [];
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // If URL has a hash like #c-<commentId>, scroll to that comment after comments render
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.replace("#", "");
+    // give DOM a moment to render
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("highlighted-comment");
+        setTimeout(() => el.classList.remove("highlighted-comment"), 3000);
+      }
+    }, 50);
+  }, [location.hash, commentsArray]);
 
   return (
     <>
@@ -77,11 +95,7 @@ function Comment({ onPostComment }) {
           {token && (
             <div className="my-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <img 
-                  src={profilePic || `https://api.dicebear.com/9.x/initials/svg?seed=${name}`} 
-                  alt={name} 
-                  className="w-8 h-8 rounded-full"
-                />
+                <Avatar name={name} src={profilePic} alt={name} className="w-8 h-8 rounded-full" />
                 <span className="text-sm font-medium dark:text-white">{name}</span>
               </div>
               <textarea
@@ -116,6 +130,7 @@ function Comment({ onPostComment }) {
 
 // Reusable component for displaying comments and replies
 function DisplayComments({ comments, userId, blogId, token, creatorId, dispatch }) {
+  const navigate = useNavigate();
   const [activeReply, setActiveReply] = useState(null);
   const [showReplies, setShowReplies] = useState({});
   const [currentEditComment, setCurrentEditComment] = useState(null);
@@ -219,7 +234,7 @@ function DisplayComments({ comments, userId, blogId, token, creatorId, dispatch 
                 <>
                   <div className="flex w-full justify-between">
                     <Link to={`/@${user.username}`} className="flex gap-2 items-center">
-                      <img src={user.profilePic || `https://api.dicebear.com/9.x/initials/svg?seed=${user.name}`} alt={user.name} className="w-8 h-8 rounded-full object-cover"/>
+                      <Avatar name={user.name} src={user.profilePic} alt={user.name} className="w-8 h-8 rounded-full" />
                       <div>
                         <p className="capitalize font-medium text-sm dark:text-white">{user.name}</p>
                         <p className="text-xs text-neutral-500 dark:text-neutral-400">{formatDate(comment.createdAt)}</p>
@@ -237,7 +252,29 @@ function DisplayComments({ comments, userId, blogId, token, creatorId, dispatch 
                     )}
                   </div>
 
-                  <p className="font-medium text-neutral-800 dark:text-neutral-300 py-2">{comment.comment}</p>
+                  <p
+                    id={`c-${comment._id}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // If already on blog page, just scroll & highlight; otherwise navigate to blog page
+                      if (window.location.pathname === `/blog/${blogId}` || window.location.pathname === `/blog/${blogId}/`) {
+                        const el = document.getElementById(`c-${comment._id}`);
+                        if (el) {
+                          el.scrollIntoView({ behavior: "smooth", block: "center" });
+                          el.classList.add("highlighted-comment");
+                          setTimeout(() => el.classList.remove("highlighted-comment"), 3000);
+                        }
+                        // ensure panel stays open
+                        dispatch(openOnLoad());
+                      } else {
+                        dispatch(openOnLoad());
+                        navigate(`/blog/${blogId}#c-${comment._id}`);
+                      }
+                    }}
+                    className="font-medium text-neutral-800 dark:text-neutral-300 py-2 cursor-pointer hover:underline"
+                  >
+                    {comment.comment}
+                  </p>
 
                   <div className="flex gap-4 items-center">
                     <div className="cursor-pointer flex gap-1 items-center text-neutral-500 dark:text-neutral-400">
