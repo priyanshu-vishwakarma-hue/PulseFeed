@@ -9,6 +9,7 @@ const {
   likeBlog,
   saveBlog,
   searchBlogs,
+  getBlogComments,
 } = require("../controllers/blogController");
 
 const verifyUser = require("../middlewares/auth");
@@ -34,6 +35,7 @@ route.post(
 route.get("/blogs", getBlogs);
 
 route.get("/blogs/:blogId", getBlog);
+route.get("/blogs/:blogId/comments", getBlogComments);
 
 // CHANGED: patch to put
 route.put(

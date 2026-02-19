@@ -383,6 +383,39 @@ async function getAllUsers(req, res) {
   }
 }
 
+async function searchUsers(req, res) {
+  try {
+    const query = String(req.query.q || "").trim();
+    if (!query) {
+      return res.status(200).json({
+        success: true,
+        users: [],
+      });
+    }
+
+    const users = await User.find({
+      $or: [
+        { username: { $regex: query, $options: "i" } },
+        { name: { $regex: query, $options: "i" } },
+      ],
+    })
+      .select("name username profilePic")
+      .limit(8)
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Please try again",
+      error: err.message,
+    });
+  }
+}
+
 // --- THIS IS THE FIX ---
 async function getUserById(req, res) {
   try {
@@ -675,6 +708,7 @@ async function changeSavedLikedBlog(req, res) {
 module.exports = {
   createUser,
   getAllUsers,
+  searchUsers,
   getUserById,
   updateUser,
   deleteUser,

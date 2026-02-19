@@ -3,6 +3,7 @@ const express = require("express");
 const {
   createUser,
   getAllUsers,
+  searchUsers,
   getUserById,
   updateUser,
   deleteUser,
@@ -14,13 +15,15 @@ const {
 } = require("../controllers/userController");
 const verifyUser = require("../middlewares/auth");
 const upload = require("../utils/multer");
+const { authLimiter } = require("../middlewares/rateLimit");
 
 const route = express.Router();
 
-route.post("/signup", createUser);
-route.post("/signin", login);
+route.post("/signup", authLimiter, createUser);
+route.post("/signin", authLimiter, login);
 
 route.get("/users", getAllUsers);
+route.get("/users-search", verifyUser, searchUsers);
 
 route.get("/users/:username", getUserById);
 
@@ -34,7 +37,7 @@ route.delete("/users/:id", verifyUser, deleteUser);
 route.get("/verify-email/:verificationToken", verifyEmail);
 
 //google auth route
-route.post("/google-auth", googleAuth);
+route.post("/google-auth", authLimiter, googleAuth);
 
 // follow /unfollow
 // CHANGED: patch to put
