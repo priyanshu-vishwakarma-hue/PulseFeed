@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import usePagination from "../hooks/usePagination";
 import DisplayBlogs from "../components/DisplayBlogs";
@@ -11,6 +11,7 @@ import LeftSidebar from "../components/LeftSidebar"; // Import new sidebar
 function HomePage() {
   const [page, setPage] = useState(1);
   const { blogs, hasMore, isLoading, setBlogs } = usePagination("blogs", {}, 5, page);
+  const loadMoreRef = useRef(null);
   const { isOpen: isSidePanelOpen } = useSelector((state) => state.comment);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -21,6 +22,29 @@ function HomePage() {
     dispatch(openOnLoad()); // Tell panel to open on page load
     navigate(`/blog/${blog.blogId}`); // Navigate to the blog page
   };
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasMore && !isLoading) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      {
+        root: null,
+        // Start loading before reaching the exact bottom to make loading feel seamless.
+        rootMargin: "500px 0px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, isLoading]);
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,19 +66,18 @@ function HomePage() {
             onCommentIconClick={onCommentClick}
           />
           
-          {isLoading && (
+          {isLoading && blogs.length === 0 && (
              <div className="flex justify-center items-center w-full h-64">
                <span className="loader"></span>
              </div>
           )}
-          
-          {hasMore && !isLoading && (
-            <button
-              onClick={() => setPage((prev) => prev + 1)}
-              className="w-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 font-medium px-4 py-3 rounded-md"
-            >
-              Load more
-            </button>
+
+          {hasMore && <div ref={loadMoreRef} className="h-2" aria-hidden="true" />}
+
+          {isLoading && blogs.length > 0 && (
+            <div className="flex justify-center items-center py-8">
+              <span className="loader"></span>
+            </div>
           )}
         </main>
 
