@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { login } from "../utils/userSilce";
 import { Navigate, useNavigate } from "react-router-dom";
 import useLoader from "../hooks/useLoader";
+import { getApiBaseUrl } from "../utils/network";
 
 function EditProfile() {
   const {
@@ -85,7 +86,7 @@ function EditProfile() {
 
     try {
       const res = await axios.put( 
-        `${import.meta.env.VITE_BACKEND_URL}/users/${userId}`,
+        `${getApiBaseUrl()}/users/${userId}`,
         formData,
         {
           headers: {

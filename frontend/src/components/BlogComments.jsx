@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { openOnLoad } from "../utils/commentSlice";
 import Avatar from "./Avatar";
+import { getApiBaseUrl } from "../utils/network";
 // Import 'setComments' here for the parent component
 import {
   setCommentLikes,
@@ -30,7 +31,7 @@ function BlogComments({ blog, onCommentAdded, onClose }) {
     if (!blog?._id || !hasMore) return;
     try {
       const { data } = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/${blog.blogId}/comments?page=${page}&limit=10`
+        `${getApiBaseUrl()}/blogs/${blog.blogId}/comments?page=${page}&limit=10`
       );
       setCommentsList((prev) => [...prev, ...data.comments]);
       setHasMore(data.hasMore);
@@ -46,7 +47,7 @@ function BlogComments({ blog, onCommentAdded, onClose }) {
 
     try {
       let res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/comment/${blog._id}`,
+        `${getApiBaseUrl()}/blogs/comment/${blog._id}`,
         { comment: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -75,7 +76,7 @@ function BlogComments({ blog, onCommentAdded, onClose }) {
       (async () => {
         try {
           const { data } = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL}/blogs/${blog.blogId}/comments?page=1&limit=10`
+            `${getApiBaseUrl()}/blogs/${blog.blogId}/comments?page=1&limit=10`
           );
           setCommentsList(data.comments);
           setHasMore(data.hasMore);
@@ -166,7 +167,7 @@ export function DisplayComments({ comments, userId, blogId, blogSlug, token, cre
 
     try {
       let res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/comment/${parentCommentId}/${blogId}`,
+        `${getApiBaseUrl()}/comment/${parentCommentId}/${blogId}`,
         { reply: replyText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -182,7 +183,7 @@ export function DisplayComments({ comments, userId, blogId, blogSlug, token, cre
     if (!token) return toast.error("Please sign in to like comments");
     try {
       const res = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/like-comment/${commentId}`,
+        `${getApiBaseUrl()}/blogs/like-comment/${commentId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -199,7 +200,7 @@ export function DisplayComments({ comments, userId, blogId, blogSlug, token, cre
 
     try {
       let res = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/edit-comment/${id}`,
+        `${getApiBaseUrl()}/blogs/edit-comment/${id}`,
         { updatedCommentContent },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -217,7 +218,7 @@ export function DisplayComments({ comments, userId, blogId, blogSlug, token, cre
     if (!token) return toast.error("Please sign in to delete");
     try {
       let res = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/comment/${id}`,
+        `${getApiBaseUrl()}/blogs/comment/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success(res.data.message);

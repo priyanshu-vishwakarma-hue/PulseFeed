@@ -17,6 +17,7 @@ import TextVariantTune from "@editorjs/text-variant-tune";
 import { setIsOpen } from "../utils/commentSlice";
 import { removeSelectedBlog } from "../utils/selectedBlogSlice";
 import useLoader from "../hooks/useLoader";
+import { getApiBaseUrl } from "../utils/network";
 
 function AddBlog() {
   const { id } = useParams(); // 'id' here is the blogId (slug)
@@ -112,8 +113,8 @@ function AddBlog() {
 
     try {
       const url = isUpdate 
-        ? `${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`
-        : `${import.meta.env.VITE_BACKEND_URL}/blogs`;
+        ? `${getApiBaseUrl()}/blogs/${id}`
+        : `${getApiBaseUrl()}/blogs`;
         
       const method = isUpdate ? axios.put : axios.post; // Use PUT for updates
 

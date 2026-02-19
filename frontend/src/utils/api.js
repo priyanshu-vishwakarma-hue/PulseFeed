@@ -1,6 +1,7 @@
 import axios from "axios";
 import toast from "react-hot-toast";
 import { updateData } from "./userSilce"; // Correct import
+import { getApiBaseUrl } from "./network";
 
 // API call for following a user
 export async function handleFollowCreator(id, token, dispatch) {
@@ -9,7 +10,7 @@ export async function handleFollowCreator(id, token, dispatch) {
   }
   try {
     let res = await axios.put(
-      `${import.meta.env.VITE_BACKEND_URL}/follow/${id}`,
+      `${getApiBaseUrl()}/follow/${id}`,
       {},
       {
         headers: {
@@ -31,7 +32,7 @@ export async function handleSaveBlog(id, token) {
   }
   try {
     let res = await axios.put(
-      `${import.meta.env.VITE_BACKEND_URL}/save-blog/${id}`,
+      `${getApiBaseUrl()}/save-blog/${id}`,
       {},
       {
         headers: {
@@ -54,7 +55,7 @@ export async function handleLikeBlog(id, token) {
   }
   try {
     let res = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}/blogs/like/${id}`,
+      `${getApiBaseUrl()}/blogs/like/${id}`,
       {},
       {
         headers: {

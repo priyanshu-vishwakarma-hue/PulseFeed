@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { formatDate } from "../utils/formatDate";
 import Avatar from "./Avatar";
+import { getApiBaseUrl } from "../utils/network";
 
 function Comment({ onPostComment }) {
   const dispatch = useDispatch();
@@ -37,7 +38,7 @@ function Comment({ onPostComment }) {
       if (!comment.trim()) return toast.error("Comment cannot be empty");
       try {
         let res = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/blogs/comment/${blogId}`,
+          `${getApiBaseUrl()}/blogs/comment/${blogId}`,
           { comment },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -54,7 +55,6 @@ function Comment({ onPostComment }) {
   };
   
   const commentsArray = Array.isArray(comments) ? comments : [];
-  const navigate = useNavigate();
   const location = useLocation();
 
   // If URL has a hash like #c-<commentId>, scroll to that comment after comments render
@@ -152,7 +152,7 @@ function DisplayComments({ comments, userId, blogId, token, creatorId, dispatch 
     if (!token || !replyText.trim()) return;
     try {
       let res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/comment/${parentCommentId}/${blogId}`,
+        `${getApiBaseUrl()}/comment/${parentCommentId}/${blogId}`,
         { reply: replyText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -168,7 +168,7 @@ function DisplayComments({ comments, userId, blogId, token, creatorId, dispatch 
     if (!token) return toast.error("Please sign in to like");
     try {
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/like-comment/${commentId}`,
+        `${getApiBaseUrl()}/blogs/like-comment/${commentId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -182,7 +182,7 @@ function DisplayComments({ comments, userId, blogId, token, creatorId, dispatch 
     if (!token || !updatedCommentContent.trim()) return;
     try {
       let res = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/edit-comment/${id}`,
+        `${getApiBaseUrl()}/blogs/edit-comment/${id}`,
         { updatedCommentContent },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -198,7 +198,7 @@ function DisplayComments({ comments, userId, blogId, token, creatorId, dispatch 
     if (!token) return;
     try {
       await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/comment/${id}`,
+        `${getApiBaseUrl()}/blogs/comment/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       dispatch(deleteCommentAndReply(id));

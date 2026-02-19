@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
 import { updateData } from "../utils/userSilce";
+import { getApiBaseUrl } from "../utils/network";
 
 function Setting() {
   const {
@@ -21,10 +22,8 @@ function Setting() {
 
   async function handleVisibility() {
     try {
-      const res = await axios.put( // CHANGED
-        `${
-          import.meta.env.VITE_BACKEND_URL
-        }/change-saved-liked-blog-visibility`,
+      const res = await axios.put(
+        `${getApiBaseUrl()}/change-saved-liked-blog-visibility`,
         data,
         {
           headers: {

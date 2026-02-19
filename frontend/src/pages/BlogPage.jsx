@@ -14,8 +14,9 @@ import { handleSaveBlog, handleFollowCreator, handleLikeBlog } from "../utils/ap
 import Comment from "../components/Comment";
 import { setIsOpen, openOnLoad } from "../utils/commentSlice";
 import { toggleLikeBlogLocal, toggleSaveBlogLocal, removeBlogFromLists } from "../utils/userSilce";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Avatar from "../components/Avatar";
+import { getApiBaseUrl } from "../utils/network";
 
 function BlogPage() {
   const { id } = useParams();
@@ -44,7 +45,7 @@ function BlogPage() {
     try {
       let {
         data: { blog: fetchedBlog },
-      } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`);
+      } = await axios.get(`${getApiBaseUrl()}/blogs/${id}`);
       dispatch(addSlectedBlog(fetchedBlog));
       
       // Use the freshly fetched blog data to set the state
@@ -109,7 +110,7 @@ function BlogPage() {
 
     try {
       let res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/comment/${blog._id}`,
+        `${getApiBaseUrl()}/blogs/comment/${blog._id}`,
         { comment: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -9,6 +9,7 @@ import { addSlectedBlog } from "../utils/selectedBlogSlice";
 import { openOnLoad } from "../utils/commentSlice";
 import FollowListModal from "../components/FollowListModal"; // <-- IMPORT MODAL
 import Avatar from "../components/Avatar";
+import { getApiBaseUrl } from "../utils/network";
 
 function ProfilePage() {
   const { username } = useParams();
@@ -111,7 +112,7 @@ function ProfilePage() {
       try {
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
         let res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/users/${username.split("@")[1]}`,
+          `${getApiBaseUrl()}/users/${username.split("@")[1]}`,
           { headers }
         );
         // sanitize server response: remove null/invalid blog entries (handles deleted posts)
@@ -194,6 +195,13 @@ function ProfilePage() {
                   >
                     {following.includes(userData?._id) ? "Following" : "Follow"}
                   </button>
+                )}
+                {userId !== userData._id && token && (
+                  <Link to={`/chat?user=${userData.username}`} className="block mt-2">
+                    <button className="w-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 px-5 py-2 rounded-full text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700">
+                      Message
+                    </button>
+                  </Link>
                 )}
               </div>
             </div>

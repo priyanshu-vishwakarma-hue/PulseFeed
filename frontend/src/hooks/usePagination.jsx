@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import useLoader from "./useLoader";
+import { getApiBaseUrl } from "../utils/network";
 
 function usePagination(path, queryParams = {}, limit = 5, page = 1) {
   const [hasMore, setHasMore] = useState(true);
@@ -17,7 +18,7 @@ function usePagination(path, queryParams = {}, limit = 5, page = 1) {
       try {
         startLoading();
         let res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/${path}`,
+          `${getApiBaseUrl()}/${path}`,
           {
             params: { ...queryParams, limit, page },
           }

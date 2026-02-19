@@ -8,6 +8,7 @@ import Input from "../components/Input";
 import googleIcon from "../assets/google-icon-logo-svgrepo-com.svg";
 import { googleAuth, handleRedirectResult } from "../utils/firebase";
 import logo from "/logo.svg";
+import { getApiBaseUrl } from "../utils/network";
 
 function AuthForm({ type }) {
   const [userData, setUserData] = useState({
@@ -18,7 +19,7 @@ function AuthForm({ type }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const endpointBase = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
+  const endpointBase = getApiBaseUrl();
 
   async function handleAuthForm(e) {
     e.preventDefault();

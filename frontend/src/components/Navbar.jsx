@@ -1,15 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom"; // Added useLocation
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../utils/userSilce";
 import { useTheme } from "../contexts/ThemeContext";
 import Avatar from "./Avatar";
+import toast from "react-hot-toast";
+import { connectChatSocket, disconnectChatSocket } from "../utils/chatSocket";
+import {
+  appendMessage,
+  chatConnected,
+  chatDisconnected,
+  markMessageDeletedForEveryone,
+  removeMessage,
+  setOnlineUsers,
+  setUnreadCount,
+  setUserOffline,
+  setUserOnline,
+} from "../utils/chatSlice";
 
 const logoUrl = "https://i.pinimg.com/736x/77/54/2f/77542ff0544861f29a82c1a1aa824cab.jpg";
 
 function Navbar() {
   const { token, name, profilePic, username } = useSelector(
     (state) => state.user
+  );
+  const { id: currentUserId } = useSelector((state) => state.user);
+  const { unreadByConversation, activeConversationId } = useSelector(
+    (state) => state.chat
   );
   const { isOpen: isCommentPanelOpen } = useSelector((state) => state.comment);
   
@@ -21,6 +38,18 @@ function Navbar() {
   const [showMobileSearch, setShowMobileSearch] = useState(false); 
 
   const dispatch = useDispatch();
+  const pathnameRef = useRef(location.pathname);
+  const activeConversationRef = useRef(activeConversationId);
+
+  const totalUnread = useMemo(
+    () =>
+      Object.values(unreadByConversation || {}).reduce(
+        (sum, count) => sum + Number(count || 0),
+        0
+      ),
+    [unreadByConversation]
+  );
+
   function handleLogout() {
     dispatch(logout());
     setShowPopup(false);
@@ -32,6 +61,60 @@ function Navbar() {
       setShowMobileSearch(false);
     }
   }, [navigate, location.pathname]); 
+
+  useEffect(() => {
+    pathnameRef.current = location.pathname;
+    activeConversationRef.current = activeConversationId;
+  }, [location.pathname, activeConversationId]);
+
+  useEffect(() => {
+    if (!token) {
+      disconnectChatSocket();
+      dispatch(chatDisconnected());
+      return;
+    }
+
+    const socket = connectChatSocket(token, {
+      onConnect: () => dispatch(chatConnected()),
+      onDisconnect: () => dispatch(chatDisconnected()),
+      onUnauthorized: () => dispatch(logout()),
+      onUserOnline: (userId) => dispatch(setUserOnline(userId)),
+      onUserOffline: (userId) => dispatch(setUserOffline(userId)),
+      onOnlineUsers: (userIds) => dispatch(setOnlineUsers(userIds)),
+      onUnreadUpdate: (payload) => dispatch(setUnreadCount(payload)),
+      onNewMessage: ({ conversationId, message }) => {
+        dispatch(appendMessage({ conversationId, message }));
+
+        const senderId = message?.sender?._id || message?.sender;
+        const isSelfMessage = senderId && String(senderId) === String(currentUserId);
+        const isOnSameChat =
+          pathnameRef.current === "/chat" &&
+          String(activeConversationRef.current || "") === String(conversationId || "");
+
+        if (!isSelfMessage && !isOnSameChat) {
+          const senderName = message?.sender?.name || "New message";
+          toast(`${senderName}: ${message?.content || ""}`, {
+            duration: 3500,
+            icon: "💬",
+          });
+        }
+      },
+      onMessageDeleted: ({ conversationId, messageId, scope, content }) => {
+        if (scope === "everyone") {
+          dispatch(
+            markMessageDeletedForEveryone({ conversationId, messageId, content })
+          );
+        } else {
+          dispatch(removeMessage({ conversationId, messageId }));
+        }
+      },
+      onConnectError: () => dispatch(chatDisconnected()),
+    });
+
+    return () => {
+      if (socket) disconnectChatSocket();
+    };
+  }, [token, dispatch, currentUserId]);
 
   const handleSearch = (query) => {
       if (query?.trim()) {
@@ -125,6 +208,19 @@ function Navbar() {
                 <i className="fi fi-rr-edit text-xl"></i>
                 <span className="text-sm font-medium hidden sm:inline">Write</span>
               </Link>
+              {token && (
+                <Link to={"/chat"} className="flex gap-2 items-center text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-500">
+                  <div className="relative">
+                    <i className="fi fi-rr-comment-alt text-xl"></i>
+                    {totalUnread > 0 && (
+                      <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] leading-[18px] text-center font-semibold">
+                        {totalUnread > 99 ? "99+" : totalUnread}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium hidden sm:inline">Chat</span>
+                </Link>
+              )}
 
               {/* Profile/Auth section */}
               {token ? (
@@ -142,6 +238,16 @@ function Navbar() {
                       className="w-48 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-md shadow-lg absolute z-40 right-0 top-12 py-1"
                     >
                       <Link to={`/@${username}`} onClick={() => setShowPopup(false)}> <p className="popup">Profile</p> </Link>
+                      <Link to={"/chat"} onClick={() => setShowPopup(false)}>
+                        <p className="popup flex items-center justify-between">
+                          <span>Chat</span>
+                          {totalUnread > 0 && (
+                            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] leading-[18px] text-center font-semibold">
+                              {totalUnread > 99 ? "99+" : totalUnread}
+                            </span>
+                          )}
+                        </p>
+                      </Link>
                       <Link to={`/edit-profile`} onClick={() => setShowPopup(false)}> <p className="popup">Edit Profile</p> </Link>
                       <Link to={"/setting"} onClick={() => setShowPopup(false)}> <p className="popup">Settings</p> </Link>
                       <hr className="my-1 border-neutral-200 dark:border-neutral-700"/>

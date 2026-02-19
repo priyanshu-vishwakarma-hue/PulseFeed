@@ -9,6 +9,7 @@ import ProfilePage from "./pages/ProfilePage";
 import EditProfile from "./pages/EditProfile";
 import SearchBlogs from "./components/SearchBlogs";
 import Setting from "./components/Setting";
+import ChatPage from "./pages/ChatPage";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route path="/:username/draft-blogs" element={<ProfilePage />}></Route>
         <Route path="/edit-profile" element={<EditProfile />}></Route>
         <Route path="/setting" element={<Setting />} />
+        <Route path="/chat" element={<ChatPage />} />
       </Route>
     </Routes>
   );

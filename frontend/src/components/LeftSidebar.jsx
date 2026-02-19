@@ -32,6 +32,11 @@ const NavLink = ({ to, icon, text }) => {
 
 function LeftSidebar() {
   const { token, username } = useSelector((state) => state.user);
+  const { unreadByConversation } = useSelector((state) => state.chat);
+  const totalUnread = Object.values(unreadByConversation || {}).reduce(
+    (sum, count) => sum + Number(count || 0),
+    0
+  );
 
   return (
     <aside className="w-full">
@@ -45,6 +50,17 @@ function LeftSidebar() {
           <>
             <NavLink to={`/@${username}`} icon="fi-rr-user" text="Profile" />
             <NavLink to={`/@${username}/saved-blogs`} icon="fi-rr-bookmark" text="Saved" />
+            <Link to={"/chat"} className="group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-transparent text-neutral-700 hover:border-neutral-200 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:border-neutral-700 dark:hover:bg-neutral-800/70">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600 group-hover:bg-white dark:bg-neutral-800 dark:text-neutral-400 dark:group-hover:bg-neutral-700">
+                <i className="fi fi-rr-comment-alt text-base"></i>
+              </span>
+              <span className="text-[15px] font-medium">Chat</span>
+              {totalUnread > 0 && (
+                <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] leading-[18px] text-center font-semibold">
+                  {totalUnread > 99 ? "99+" : totalUnread}
+                </span>
+              )}
+            </Link>
           </>
         )}
         </div>
