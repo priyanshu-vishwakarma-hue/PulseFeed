@@ -28,12 +28,15 @@ function parseOrigins(value) {
     .filter(Boolean);
 }
 
+const HARDCODED_ORIGINS = ["https://pulse-feed-omega.vercel.app"];
 const frontendOrigins = parseOrigins(FRONTEND_URL);
 if (frontendOrigins.length === 0) {
   frontendOrigins.push("http://localhost:5173");
 }
 const socketOrigins = parseOrigins(SOCKET_CORS_ORIGIN || FRONTEND_URL);
-const allowedOrigins = [...new Set([...frontendOrigins, ...socketOrigins])];
+const allowedOrigins = [
+  ...new Set([...HARDCODED_ORIGINS, ...frontendOrigins, ...socketOrigins]),
+];
 
 function corsOriginValidator(origin, callback) {
   if (!origin) return callback(null, true);
